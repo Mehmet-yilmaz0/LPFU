@@ -1,44 +1,65 @@
+using System;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class CharactgerMovement : MonoBehaviour
 {
+
+    private InputSystem_Actions InputActions;
+    [Header("Movement Settings")]
+    [SerializeField] float speed = 1;
+    Vector2 MoveInput;
+    CharacterController _characterController;
     public SimpleControls _simpleControl;
     public Vector2 _position;
-    public float _yaw; 
-    public float speed = 4;
-    public float rotationSensitivity = 5f;
+    float _yaw;
+    float _pitch;
+    public float rotationSensitivity = 0.5f;
 
     private Animator anim;
-
+    CharacterController controller;
     void Awake()
     {
-        _simpleControl = new SimpleControls();
+        InputActions = new InputSystem_Actions();
+        //_simpleControl = new SimpleControls();
+        controller = GetComponent<CharacterController>();
         anim = GetComponent<Animator>();
     }
 
     private void OnEnable()
     {
-        _simpleControl.Enable();
+        //_simpleControl.Enable();
+        InputActions.Player.Enable();
+
+        //klavye girdileri için hareket
+        InputActions.Player.Move.performed += ctx => MoveInput = ctx.ReadValue<Vector2>();
+        InputActions.Player.Move.canceled += ctx => MoveInput = Vector2.zero;
     }
 
     private void OnDisable()
     {
-        _simpleControl.Disable();
+        //_simpleControl.Disable();
+        InputActions.Player.Disable();
+
+        //klavye girdileri için hareket
+        InputActions.Player.Move.performed -= ctx => MoveInput = ctx.ReadValue<Vector2>();
+        InputActions.Player.Move.canceled -= ctx => MoveInput = Vector2.zero;
     }
 
     void Update()
     {
-        GetInput();
-        move();
-        rotate();
+        //hareket kýsmý
+        Vector3 move= transform.right*MoveInput.x + transform.forward*MoveInput.y;
+        controller.Move(move*Time.deltaTime*speed);
     }
 
-    public void GetInput()
+    /*public void GetInput()
     {
         _position = _simpleControl.gameplay.move.ReadValue<Vector2>();
 
         Vector2 lookDelta = _simpleControl.gameplay.look.ReadValue<Vector2>();
-        _yaw += lookDelta.x * rotationSensitivity; 
+        _yaw += lookDelta.x * rotationSensitivity;
+        _pitch += Math.Clamp(lookDelta.y * rotationSensitivity, -80, 80);
     }
 
     public void move()
@@ -53,5 +74,5 @@ public class CharactgerMovement : MonoBehaviour
     public void rotate()
     {
         transform.rotation = Quaternion.Euler(0f, _yaw, 0f);
-    }
+    }*/
 }
